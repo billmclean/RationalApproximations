@@ -1,7 +1,9 @@
 module RationalApproximations
 
 import GenericSVD: svd!
-import LinearAlgebra: norm
+#import GenericLinearAlgebra: qr, eigen
+import LinearAlgebra: norm, Diagonal, qr, eigen
+import Optim: optimize
 
 export aaa_v1, aaa_v2, minimax
 
@@ -246,7 +248,7 @@ function equioscillation!(f::Function, x::Vector{T},
             M[l,k] = Mlk
         end
     end
-    d = Vector{Float64}(undef, 2N)
+    d = Vector{T}(undef, 2N)
     for l = 1:2N
         Dl = one(T)
         for p = 1:l-1
@@ -260,7 +262,7 @@ function equioscillation!(f::Function, x::Vector{T},
     D = Diagonal(d)
     Fact = qr(D*M)
     Q1, R = Matrix(Fact.Q), Fact.R
-    sgn = Vector{Float64}(undef, 2N)
+    sgn = Vector{T}(undef, 2N)
     sgn[1] = -one(T)
     for l = 2:2N
         sgn[l] = -sgn[l-1]
