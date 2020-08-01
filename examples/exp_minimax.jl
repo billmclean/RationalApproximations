@@ -1,5 +1,5 @@
 import RationalApproximations: aaa_v1, aaa_v2, locate_extrema_idx
-import RationalApproximations: RationalFunc, equioscillation!
+import RationalApproximations: RationalFunc, equioscillation!, minimax
 using PyPlot
 
 f = exp
@@ -39,7 +39,8 @@ title("Locate extrema")
 grid(true)
 axis(xylims)
 
-α, β, λ = equioscillation!(f, x, supp_pt)
+clamp = :no
+α, β, λ = equioscillation!(f, x, supp_pt, clamp)
 new_r = RationalFunc(α, β, supp_pt)
 figure(4)
 plot(S, f.(S) - new_r.(S),
@@ -51,7 +52,7 @@ axis(xylims)
 
 max_iterations = 4
 x = S[idx]
-r, zmin, zmax = minimax(f, x, supp_pt, (-1.0,1.0), max_iterations)
+r, zmin, zmax = minimax(f, x, supp_pt, (-1.0,1.0), max_iterations, clamp)
 m = length(r)
 figure(5)
 plot(S, f.(S) - r[m].(S), x, f.(x) - r[m].(x), "o")

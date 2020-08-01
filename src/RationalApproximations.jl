@@ -164,11 +164,11 @@ function aaa_v2(F::Vector{T}, S::AbstractVector{T},
 end
 
 """
-    minimax(f, x, supp_pt, Interval, max_iterations) -> r, zmin, zmax
+    minimax(f, x, supp_pt, Interval, max_iterations, clamp) -> r, zmin, zmax
 """
 function minimax(f::Function, x::Vector{T}, supp_pt::Vector{T},
-                 Interval::Tuple{T,T}, 
-                 max_iterations::Integer) where T <: AbstractFloat
+                 Interval::Tuple{T,T}, max_iterations::Integer,
+                 clamp=:no) where T <: AbstractFloat
     N = length(supp_pt)
     if length(x) ≠ 2N
         throw(DimensionMismatch("x must be twice as long as supp_pt"))
@@ -180,7 +180,7 @@ function minimax(f::Function, x::Vector{T}, supp_pt::Vector{T},
     zmin = similar(zmax)
     r = Vector{RationalFunc{T}}(undef, max_iterations)
     for i = 1:max_iterations
-        α, β, λ = equioscillation!(f, x, supp_pt)
+        α, β, λ = equioscillation!(f, x, supp_pt, clamp)
         r[i] = RationalFunc(α, β, supp_pt)
         zmin[i], zmax[i] = locate_extrema!(x, Interval) do t
             return f(t) - r[i](t)
@@ -227,10 +227,11 @@ function locate_extrema_idx(resid::Vector{T},
 end
 
 """
-    equioscillation!(f, x, supp_pt) -> α, β, λ
+    equioscillation!(f, x, supp_pt, clamp) -> α, β, λ
 """
 function equioscillation!(f::Function, x::Vector{T},
-                         supp_pt::Vector{T}) where T <: AbstractFloat
+                         supp_pt::Vector{T},
+                         clamp::Symbol) where T <: AbstractFloat
     N = length(supp_pt)
     if length(x) ≠ 2N
         throw(DimensionMismatch("x must be twice as long as supp_pt"))
@@ -270,7 +271,23 @@ function equioscillation!(f::Function, x::Vector{T},
     S = Diagonal(sgn)
     F = Diagonal(f.(x))
     A = Q1' * ( S * F ) * Q1
-    EFact = eigen(A)
+    if clamp == :no
+        EFact = eigen(A)
+    else
+        I0 = Diagonal(ones(2N))
+        if clamp == :left
+            I0[1,1] = zero(T)
+        elseif clamp == :right
+            I0[2N,2N] = zero(T)
+        elseif clamp == :both
+            I0[1,1] = zero(T)
+            I0[2N,2N] = zero(T)
+        else
+            error("illegal value $clamp for argument clamp")
+        end
+        B = Q1' * I0 * Q1
+        EFact = eigen(A, B)
+    end
     y = EFact.vectors
     Q1y = Q1 * y
     q = D \ Q1y
@@ -291,9 +308,13 @@ function equioscillation!(f::Function, x::Vector{T},
     if check_count ≠ 1
         error("Failed to find unique eigenpair with q≠0")
     end
-    α = R \ ( Q1' * F * Q1y[:,k_no_root] )
-    β = R \ y[:,k_no_root]
     λ = EFact.values[k_no_root]
+    if clamp == :no
+        α = R \ ( Q1' * F * Q1y[:,k_no_root] )
+    else
+        α = R \ ( Q1' * (F-λ*I0*S) * Q1y[:,k_no_root] )
+    end
+    β = R \ y[:,k_no_root]
     return α, β, λ
 end
 
