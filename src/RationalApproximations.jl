@@ -5,7 +5,7 @@ import GenericSVD: svd!
 import LinearAlgebra: norm, Diagonal, qr, eigen
 import Optim: optimize
 
-export aaa_v1, aaa_v2, minimax
+export aaa_v1, aaa_v2, locate_extrema_idx, minimax
 
 """
 Represents a rational function of type `(m,m)` in barycentric form.
@@ -40,7 +40,7 @@ Adaptive Antoulas-Anderson algorithm computes rational approximations `r[m]`of
 type `(m,m)` to a real function `f(x)` based on sample values `F[i] = f(S[i])`.
 Stops if `err[m] < tol * norm(F, Inf)` or when `m` reaches `max_m`.
 
-This is version 1 of the algorithm, for which `r[m]` interpolates `f` as the
+This is version 1 of the algorithm, for which `r[m]` interpolates `f` at the
 support points based on `m` weights `w[m]` with `α[j] = w[j] * F[j]` and
 `β[j] = w[j]`.
 """
