@@ -95,7 +95,7 @@ function remove(J::Vector, i::Integer)
 end
 
 """
-    aaa_v1(F, S, max_m, tol) -> r, err
+    aaa_v2(F, S, max_m, tol) -> r, err
 
 Adaptive Antoulas-Anderson algorithm computes rational approximations `r[m]`of
 type `(m,m)` to a real function `f(x)` based on sample values `F[i] = f(S[i])`.
